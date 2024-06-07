@@ -1,0 +1,81 @@
+boxVersion = "ubuntu/focal64"
+
+## Master Configuration
+masterName = "dmaster"
+masterIp = "192.168.56.101"
+masterCpus = 2
+masterMemory = 2048
+
+## Node Configuration
+numberOfNodes = 2
+nodeNamePrefix = "dnode"
+nodeIps = ["192.168.56.102", "192.168.56.103"]
+nodeCpus = 1
+nodeMemory = 1024
+
+## NFS Server Configuration
+nfsName = "dnfs"
+nfsIp = "192.168.56.104"
+nfsCpus = 1
+nfsMemory = 1024
+
+# Main Script
+Vagrant.configure("2") do |config|
+  # Master server
+  config.vm.define masterName do |dmaster|
+    dmaster.vm.box = boxVersion
+    dmaster.vm.hostname = masterName
+    dmaster.vm.box_url = boxVersion
+    dmaster.vm.network :private_network, ip: masterIp
+    dmaster.vm.provider :virtualbox do |v|
+      v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+      v.customize ["modifyvm", :id, "--memory", masterMemory]
+      v.customize ["modifyvm", :id, "--name", masterName]
+      v.customize ["modifyvm", :id, "--cpus", masterCpus]
+    end
+    config.vm.provision "shell", inline: <<-SHELL
+      sed -i 's/ChallengeResponseAuthentication no/ChallengeResponseAuthentication yes/g' /etc/ssh/sshd_config
+      service ssh restart
+    SHELL
+    dmaster.vm.provision "shell", path: "install_common.sh"
+  end
+
+  # Worker nodes
+  (1..numberOfNodes).each do |i|
+    nodeName = nodeNamePrefix + i.to_s
+    nodeIp = nodeIps[i - 1]  # Adjust to use the correct IP from the nodeIps array
+    config.vm.define nodeName do |dnode|
+      dnode.vm.box = boxVersion
+      dnode.vm.hostname = nodeName
+      dnode.vm.network "private_network", ip: nodeIp
+      dnode.vm.provider "virtualbox" do |v|
+        v.name = nodeName
+        v.memory = nodeMemory
+        v.cpus = nodeCpus
+      end
+      config.vm.provision "shell", inline: <<-SHELL
+        sed -i 's/ChallengeResponseAuthentication no/ChallengeResponseAuthentication yes/g' /etc/ssh/sshd_config
+        service ssh restart
+      SHELL
+      dnode.vm.provision "shell", path: "install_common.sh"
+    end
+  end
+
+  # NFS server
+  config.vm.define nfsName do |dnfs|
+    dnfs.vm.box = boxVersion
+    dnfs.vm.hostname = nfsName
+    dnfs.vm.network "private_network", ip: nfsIp
+    dnfs.vm.provider :virtualbox do |v|
+      v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+      v.customize ["modifyvm", :id, "--memory", nfsMemory]
+      v.customize ["modifyvm", :id, "--name", nfsName]
+      v.customize ["modifyvm", :id, "--cpus", nfsCpus]
+    end
+    dnfs.vm.provision "shell", inline: <<-SHELL
+      sed -i 's/ChallengeResponseAuthentication no/ChallengeResponseAuthentication yes/g' /etc/ssh/sshd_config
+      service ssh restart
+    SHELL
+    dnfs.vm.provision "shell", path: "install_common.sh"
+  end
+end
