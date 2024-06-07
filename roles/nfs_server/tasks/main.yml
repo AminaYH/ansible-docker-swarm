@@ -1,4 +1,4 @@
-- name: Ensure NFS utilities are installed
+- name: NFS utilities are installed
   apt:
     name: nfs-common,nfs-kernel-server
     state: present
