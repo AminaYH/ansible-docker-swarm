@@ -18,8 +18,4 @@ This project demonstrates how to set up a Docker Swarm cluster using VirtualBox 
     Vagrant
     Ansible
 
-Step 2: Start the VMs
-
-    vagrant up
-
 ssh : default password is vagrant
