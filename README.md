@@ -6,8 +6,7 @@ This project demonstrates how to set up a Docker Swarm cluster using VirtualBox 
 
 
     docker-swarm-ansible/
-    ├── Vagrantfile
-    ├── ansible.cfg
+    ├── vagrant
     ├── inventory
     ├── playbook.yml
     └── roles/
