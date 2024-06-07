@@ -61,8 +61,8 @@
     read_only: yes
     restart_config:
       condition: any
-      delay: 30s
-      max_attempts: 5
+      delay: 40s
+      max_attempts: 4
     labels:
       traefik.enable: "true"
       traefik.swarmmode: "true"
